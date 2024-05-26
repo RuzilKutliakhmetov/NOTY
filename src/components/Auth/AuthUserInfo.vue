@@ -1,0 +1,64 @@
+<template>
+	<img class="user-info-el user-img" :src="`${user?.image}`" />
+	<div class="user-info-el">
+		<div class="user-fullname">{{ userFullName }}</div>
+		<div class="user-email">{{ user?.email }}</div>
+	</div>
+
+	<i class="pi pi-sign-out logout" @click.self="LogOut"></i>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useUserStore } from '../../store/UserStore'
+
+export default defineComponent({
+	setup() {
+		const userStore = useUserStore()
+		return {
+			userFullName: userStore.userFullName,
+			user: userStore.user,
+		}
+	},
+	methods: {
+		LogOut() {
+			this.$emit('LogOut')
+		},
+	},
+	emits: {
+		LogOut: null,
+	},
+})
+</script>
+
+<style scoped>
+.user-info-el {
+	margin-right: 0.6rem;
+}
+.user-img {
+	width: 40px;
+	height: 40px;
+	object-fit: cover;
+	border: 1px solid white;
+	border-radius: 50%;
+	background: white;
+}
+.user-fullname:hover {
+	cursor: default;
+}
+.user-email {
+	font-size: 0.7rem;
+	color: #606063;
+}
+.user-email:hover {
+	cursor: default;
+}
+.logout {
+	font-size: 1.2rem;
+	transition: color 0.3s;
+}
+.logout:hover {
+	color: #005ff9;
+	cursor: pointer;
+}
+</style>

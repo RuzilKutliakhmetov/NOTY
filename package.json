@@ -1,0 +1,28 @@
+{
+	"name": "notyproject",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"predeploy": "npm run build",
+		"deploy": "gh-pages -d dist",
+		"build": "vue-tsc && vite build",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"axios": "^1.7.2",
+		"pinia": "^2.1.7",
+		"primeicons": "^7.0.0",
+		"vue": "^3.4.21",
+		"vue-router": "^4.3.2",
+		"vuex": "^4.1.0"
+	},
+	"devDependencies": {
+		"@vitejs/plugin-vue": "^5.0.4",
+		"gh-pages": "^6.1.1",
+		"typescript": "^5.2.2",
+		"vite": "^5.2.0",
+		"vue-tsc": "^2.0.6"
+	}
+}
