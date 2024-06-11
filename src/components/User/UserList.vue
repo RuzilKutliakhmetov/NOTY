@@ -1,10 +1,12 @@
 <template>
 	<table class="user-table">
 		<tr>
-			<th>Имя и Фамилия пользователя</th>
-			<th>Почта</th>
-			<th>Номер телефона</th>
+			<th>Основная информация</th>
+			<th>Имя пользователя</th>
+			<th>Пароль</th>
+			<th>Кол-во заметок</th>
 			<th>Роль</th>
+
 			<th></th>
 		</tr>
 		<UserItem
@@ -19,6 +21,7 @@
 
 <script lang="ts">
 import { PropType, defineComponent } from 'vue'
+import { useUserStore } from '../../store/UserStore'
 import { User } from '../../types/User'
 import UserItem from './UserItem.vue'
 
@@ -33,16 +36,12 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		deleteUser(user: User) {
-			this.$emit('deleteUser', user)
+		async editUser() {
+			await useUserStore().editUser()
 		},
-		editUser(selectedUser: User) {
-			this.$emit('editUser', selectedUser)
+		async deleteUser() {
+			await useUserStore().deleteUser()
 		},
-	},
-	emits: {
-		deleteUser: (user: User) => user,
-		editUser: (selectedUser: User) => selectedUser,
 	},
 })
 </script>

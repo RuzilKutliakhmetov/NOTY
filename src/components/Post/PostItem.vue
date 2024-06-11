@@ -1,4 +1,31 @@
 <template>
+	<ui-modal-window @close="closeModalWindow" :show="isOpenModalWindow">
+		<template #icon>
+			<i class="pi pi-circle post-form-icon" style="font-size: 3rem" />
+		</template>
+		<template v-if="operationType === 'edit'" #title>
+			Редактирование заметки
+		</template>
+		<template v-if="operationType === 'edit'" #content>
+			<PostForm />
+		</template>
+		<template v-if="operationType === 'edit'" #footer>
+			<ui-button :buttonType="'primary'" @click="editPost()">
+				Изменить
+			</ui-button>
+		</template>
+		<template v-if="operationType === 'delete'" #title>
+			Вы уверены, что хотите удалить заметку
+		</template>
+		<template v-if="operationType === 'delete'" #footer>
+			<ui-button :buttonType="'dark'" @click="closeModalWindow()">
+				Отмена
+			</ui-button>
+			<ui-button :buttonType="'danger'" @click="deletePost()">
+				Удалить
+			</ui-button>
+		</template>
+	</ui-modal-window>
 	<div class="post-item-form">
 		<div class="post-item-body">
 			<div class="post-item-title">
@@ -12,21 +39,24 @@
 			<div class="post-item-buttons">
 				<div
 					class="post-item-button post-item-edit-button"
-					@click.stop="editPost"
+					@click.stop="editPostButton(post)"
 				>
 					Изменить
 				</div>
 				<div
 					class="post-item-button post-item-delete-button"
-					@click.stop="deletePost"
+					@click.stop="deletePostButton(post)"
 				>
 					Удалить
 				</div>
 			</div>
-			<div v-if="userStore.user && postStore.usersPosts">
-				<div v-if="post.userId !== userStore.user.id">
-					<!-- Вывод на экран пользователя поста{{ post.userId }} -->
-				</div>
+			<div class="user-info-el">
+				<ui-user-info>
+					<template #fullname>{{
+						userInfo.firstName + ' ' + userInfo.lastName
+					}}</template>
+					<template #email>{{ userInfo.email }}</template>
+				</ui-user-info>
 			</div>
 		</div>
 	</div>
@@ -37,14 +67,31 @@ import { PropType, defineComponent } from 'vue'
 import { usePostStore } from '../../store/PostStore'
 import { useUserStore } from '../../store/UserStore'
 import { Post } from '../../types/Post'
+import { User } from '../../types/User'
+import PostForm from './PostForm.vue'
+
+interface State {
+	isOpenModalWindow: boolean
+	operationType: string
+}
 
 export default defineComponent({
+	components: {
+		PostForm,
+	},
+	data(): State {
+		return {
+			isOpenModalWindow: false,
+			operationType: '',
+		}
+	},
 	setup() {
 		const userStore = useUserStore()
 		const postStore = usePostStore()
 		return {
 			userStore,
 			postStore,
+			postData: postStore.postData,
 		}
 	},
 	props: {
@@ -53,17 +100,47 @@ export default defineComponent({
 			required: true,
 		},
 	},
-	methods: {
-		deletePost() {
-			this.$emit('deletePost', this.post)
+	computed: {
+		userInfo(): User {
+			return useUserStore().users.filter(
+				user => user.id === this.post.userId
+			)[0]
 		},
-		editPost() {
-			this.$emit('editPost', this.post)
+	},
+	methods: {
+		closeModalWindow() {
+			this.isOpenModalWindow = false
+			usePostStore().clearPostData(usePostStore().postData)
+		},
+		editPostButton(post: Post) {
+			this.isOpenModalWindow = true
+			this.operationType = 'edit'
+			const postStore = usePostStore()
+			postStore.selectedPost = post
+			Object.assign(postStore.postData, post)
+		},
+		async editPost() {
+			const postStore = usePostStore()
+			this.$emit('editPost')
+			// await postStore.editPost()
+			postStore.clearPostData(postStore.postData)
+			this.isOpenModalWindow = false
+		},
+		deletePostButton(post: Post) {
+			this.isOpenModalWindow = true
+			this.operationType = 'delete'
+			const postStore = usePostStore()
+			postStore.selectedPost = post
+		},
+		async deletePost() {
+			this.$emit('deletePost')
+			this.isOpenModalWindow = false
+			// await usePostStore().deletePost(post)
 		},
 	},
 	emits: {
-		deletePost: (post: Post) => post,
-		editPost: (post: Post) => post,
+		editPost: null,
+		deletePost: null,
 	},
 })
 </script>

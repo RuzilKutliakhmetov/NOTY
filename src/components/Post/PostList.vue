@@ -4,20 +4,27 @@
 			v-for="post in posts"
 			:key="post.id"
 			:post="post"
-			@delete-post="deletePost"
 			@edit-post="editPost"
+			@delete-post="deletePost"
 		/>
 	</div>
 </template>
 
 <script lang="ts">
 import { PropType, defineComponent } from 'vue'
+import { usePostStore } from '../../store/PostStore'
 import { Post } from '../../types/Post'
 import PostItem from './PostItem.vue'
 
 export default defineComponent({
 	components: {
 		PostItem,
+	},
+	setup() {
+		const postStore = usePostStore()
+		return {
+			postStore,
+		}
 	},
 	props: {
 		posts: {
@@ -26,16 +33,14 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		deletePost(post: Post) {
-			this.$emit('deletePost', post)
+		async editPost() {
+			const postStore = usePostStore()
+			await postStore.editPost(this.posts)
 		},
-		editPost(selectedNote: Post) {
-			this.$emit('editPost', selectedNote)
+		async deletePost() {
+			const postStore = usePostStore()
+			await postStore.deletePost(this.posts)
 		},
-	},
-	emits: {
-		deletePost: (post: Post) => post,
-		editPost: (selectedNote: Post) => selectedNote,
 	},
 })
 </script>

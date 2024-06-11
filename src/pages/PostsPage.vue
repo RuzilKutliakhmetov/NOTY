@@ -1,50 +1,46 @@
 <template>
-	<div v-if="!userStore.user">Необходимо войти</div>
-
+	<div v-if="!isUserLoggedIn">Необходимо войти</div>
 	<div v-else>
-		<div class="page-header">
-			<div class="page-name">Ваши заметки</div>
-			<blue-button @click="createPostButton">
-				Новая заметка <i class="pi pi-plus" style="font-size: 0.7rem" />
-			</blue-button>
-		</div>
-		<my-modal-window v-model:show="modalWindowVisible">
-			<PostForm
-				:mode="mode"
-				:user="userStore.user"
-				:selected-post="selectedPost"
-				:posts-count="postsCount"
-				@close="closeForm"
-				@create-post="createPost"
-				@update-post="editPost"
-			/>
-		</my-modal-window>
-		<div v-if="postStore.posts">
-			<PostList
-				:posts="postStore.posts"
-				@delete-post="deletePost"
-				@edit-post="editPostButton"
-				v-if="!isPostsLoading"
-			/>
-			<div v-else>Идет загрузка...</div>
-		</div>
+		<ui-modal-window @close="closeModalWindow" :show="isOpenModalWindow">
+			<template #icon>
+				<i class="pi pi-circle post-form-icon" style="font-size: 3rem" />
+			</template>
+			<template #title> Новая заметка </template>
+			<template #content>
+				<PostForm />
+			</template>
+			<template #footer>
+				<ui-button :buttonType="'primary'" @click="createPost(postData)">
+					Добавить
+				</ui-button>
+			</template>
+		</ui-modal-window>
+		<ui-page>
+			<template #title>Мои заметки</template>
+			<template #buttons>
+				<ui-button :buttonType="'primary'" @click="createPostButton">
+					Новая заметка <i class="pi pi-plus" style="font-size: 0.7rem" />
+				</ui-button>
+			</template>
+			<template #content>
+				<PostList v-if="userPosts" :posts="userPosts" />
+			</template>
+		</ui-page>
 	</div>
 </template>
 
 <script lang="ts">
-import { defineComponent, watch } from 'vue'
+import { defineComponent } from 'vue'
 import PostForm from '../components/Post/PostForm.vue'
 import PostList from '../components/Post/PostList.vue'
 import { usePostStore } from '../store/PostStore'
 import { useUserStore } from '../store/UserStore'
-import { Post } from '../types/Post'
+import { Post, PostData } from '../types/Post'
 
 interface State {
-	postsCount: number
-	selectedPost: Post
-	modalWindowVisible: boolean
+	post: Post
+	isOpenModalWindow: boolean
 	isPostsLoading: boolean
-	mode: string
 }
 
 export default defineComponent({
@@ -52,83 +48,57 @@ export default defineComponent({
 		PostList,
 		PostForm,
 	},
+	data(): State {
+		return {
+			post: {
+				id: 0,
+				title: '',
+				body: '',
+				tags: [],
+				reactions: {
+					likes: 0,
+					dislikes: 0,
+				},
+				views: 0,
+				userId: 0,
+			},
+			isOpenModalWindow: false,
+			isPostsLoading: false,
+		}
+	},
 	setup() {
 		const userStore = useUserStore()
 		const postStore = usePostStore()
-
-		watch(
-			() => userStore.user,
-			(newUser, oldUser) => {
-				console.log('userStore.user изменился:', newUser, oldUser)
-				if (newUser) {
-					const postStore = usePostStore()
-					const userStore = useUserStore()
-					if (userStore.user) postStore.getUserPosts(userStore.user)
-					if (userStore.user?.role === 'admin') {
-						userStore.getUsers()
-						postStore.getUsersPosts()
-					}
-				}
-			},
-			{ deep: true }
-		)
-
 		return {
 			userStore,
 			postStore,
+			postData: postStore.postData,
+			postsCount: postStore.postsCount,
 		}
 	},
-	data(): State {
-		return {
-			postsCount: 0,
-			selectedPost: { id: 0, title: '', body: '', userId: 0 },
-			modalWindowVisible: false,
-			isPostsLoading: false,
-			mode: '',
-		}
+	computed: {
+		isUserLoggedIn() {
+			return this.userStore.isUserLoggedIn
+		},
+		userPosts() {
+			return this.postStore.userPosts
+		},
 	},
 	methods: {
-		closeForm() {
-			this.modalWindowVisible = false
-		},
-		deletePost(selectedPost: Post) {
-			const postStore = usePostStore()
-			if (postStore.posts) {
-				postStore.posts = postStore.posts.filter(
-					(post: Post) => post.id !== selectedPost.id
-				)
-			}
-		},
-		editPostButton(post: Post) {
-			this.selectedPost = post
-			this.mode = 'updateMode'
-			this.modalWindowVisible = true
-		},
-		editPost(editedPost: Post) {
-			const postStore = usePostStore()
-			if (postStore.posts) {
-				const index = postStore.posts.findIndex(
-					post => post.id === editedPost.id
-				)
-				if (index !== -1) {
-					postStore.posts[index] = editedPost
-				}
-			}
-
-			this.modalWindowVisible = false
+		closeModalWindow() {
+			this.isOpenModalWindow = false
+			usePostStore().clearPostData(usePostStore().postData)
 		},
 		createPostButton() {
-			this.mode = 'createMode'
-			this.modalWindowVisible = true
+			this.isOpenModalWindow = true
 		},
-		createPost(post: Post) {
-			const postStore = usePostStore()
-			if (postStore.posts) {
-				postStore.posts.push(post)
-				this.postsCount += 1
-			}
-
-			this.modalWindowVisible = false
+		createPost(postData: PostData) {
+			usePostStore().createPost(
+				Object.assign(this.post, postData),
+				useUserStore().userFullData?.id
+			)
+			usePostStore().clearPostData(postData)
+			this.isOpenModalWindow = false
 		},
 	},
 })

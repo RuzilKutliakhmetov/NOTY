@@ -1,113 +1,87 @@
 <template>
-	<div v-if="!userStore.user">Необходимо войти</div>
+	<div v-if="!isUserLoggedIn">Необходимо войти</div>
 	<div v-else>
-		<div class="page-header">
-			<div class="page-name">Список пользователей</div>
-		</div>
-		<div v-if="userStore.users">
-			<UserList
-				:users="userStore.users"
-				@delete-user="deleteUser"
-				@edit-user="editUserButton"
-				v-if="!isUsersLoading"
-			/>
-			<div v-else>Идет загрузка...</div>
-		</div>
+		<ui-modal-window @close="closeModalWindow" :show="isOpenModalWindow">
+			<template #icon>
+				<i class="pi pi-circle post-form-icon" style="font-size: 3rem" />
+			</template>
+			<template #title> Зарегистрировать пользователя </template>
+			<template #content>
+				<UserForm />
+			</template>
+			<template #footer>
+				<ui-button :buttonType="'primary'" @click="createUser(userData)">
+					Зарегистрировать
+				</ui-button>
+			</template>
+		</ui-modal-window>
+		<ui-page>
+			<template #title>Список пользователей</template>
+			<template #buttons>
+				<ui-button :buttonType="'primary'" @click="createUserButton">
+					Зарегистрировать пользователя
+					<i class="pi pi-plus" style="font-size: 0.7rem" />
+				</ui-button>
+			</template>
+			<template #content>
+				<UserList v-if="Users" :users="Users" />
+			</template>
+		</ui-page>
 	</div>
 </template>
 
 <script lang="ts">
-import { defineComponent, watch } from 'vue'
+import { defineComponent } from 'vue'
+import UserForm from '../components/User/UserForm.vue'
 import UserList from '../components/User/UserList.vue'
 import { usePostStore } from '../store/PostStore'
 import { useUserStore } from '../store/UserStore'
-import { User } from '../types/User'
+import { UserData } from '../types/User'
 
 interface State {
-	postsCount: number
-	selectedUser: User
-	modalWindowVisible: boolean
-	isUsersLoading: boolean
-	mode: string
+	isOpenModalWindow: boolean
 }
 
 export default defineComponent({
 	components: {
 		UserList,
+		UserForm,
 	},
 	setup() {
 		const userStore = useUserStore()
 		const postStore = usePostStore()
-
-		watch(
-			() => userStore.user,
-			(newUser, oldUser) => {
-				console.log('userStore.user изменился:', newUser, oldUser)
-				if (newUser) {
-					const postStore = usePostStore()
-					const userStore = useUserStore()
-					if (userStore.user) postStore.getUserPosts(userStore.user)
-					if (userStore.user?.role === 'admin') {
-						userStore.getUsers()
-						postStore.getUsersPosts()
-					}
-				}
-			},
-			{ deep: true }
-		)
 		return {
 			userStore,
 			postStore,
+			userData: userStore.userData,
 		}
 	},
+
 	data(): State {
 		return {
-			postsCount: 0,
-			selectedUser: {
-				id: 0,
-				firstName: '',
-				lastName: '',
-				gender: '',
-				email: '',
-				phone: '',
-				login: '',
-				password: '',
-				image: '',
-				username: '',
-				token: '',
-				status: '',
-				role: '',
-			},
-			modalWindowVisible: false,
-			isUsersLoading: false,
-			mode: '',
+			isOpenModalWindow: false,
 		}
 	},
+	computed: {
+		isUserLoggedIn() {
+			return this.userStore.isUserLoggedIn
+		},
+		Users() {
+			return this.userStore.Users
+		},
+	},
 	methods: {
-		deleteUser(selectedUser: User) {
-			const userStore = useUserStore()
-			if (userStore.users) {
-				userStore.users = userStore.users.filter(
-					(user: User) => user.id !== selectedUser.id
-				)
-			}
+		closeModalWindow() {
+			useUserStore().clearUserData(useUserStore().userData)
+			this.isOpenModalWindow = false
 		},
-		editUserButton(user: User) {
-			this.selectedUser = user
-			this.mode = 'updateMode'
-			this.modalWindowVisible = true
+		createUserButton() {
+			useUserStore().clearUserData(useUserStore().userData)
+			this.isOpenModalWindow = true
 		},
-		editUser(editedUser: User) {
-			const userStore = useUserStore()
-			if (userStore.users) {
-				const index = userStore.users.findIndex(
-					user => user.id === editedUser.id
-				)
-				if (index !== -1) {
-					userStore.users[index] = editedUser
-				}
-			}
-			this.modalWindowVisible = false
+		createUser(userData: UserData) {
+			useUserStore().createUser(userData)
+			this.isOpenModalWindow = false
 		},
 	},
 })

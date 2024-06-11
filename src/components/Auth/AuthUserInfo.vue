@@ -1,24 +1,37 @@
 <template>
-	<img class="user-info-el user-img" :src="`${user?.image}`" />
-	<div class="user-info-el">
-		<div class="user-fullname">{{ userFullName }}</div>
-		<div class="user-email">{{ user?.email }}</div>
-	</div>
-
+	<ui-user-info>
+		<template #image>
+			<img class="user-info-el user-img" :src="userImage ? userImage : ''" />
+		</template>
+		<template #fullname>{{ userFullName }}</template>
+		<template #email>{{ userEmail }}</template>
+	</ui-user-info>
 	<i class="pi pi-sign-out logout" @click.self="LogOut"></i>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useUserStore } from '../../store/UserStore'
+import UserInfo from '../UI/UserInfo.vue'
 
 export default defineComponent({
+	components: {
+		UserInfo,
+	},
 	setup() {
 		const userStore = useUserStore()
-		return {
-			userFullName: userStore.userFullName,
-			user: userStore.user,
-		}
+		return { userStore }
+	},
+	computed: {
+		userFullName() {
+			return this.userStore.getUserFullName
+		},
+		userEmail() {
+			return this.userStore.getUserEmail
+		},
+		userImage() {
+			return this.userStore.getUserImage
+		},
 	},
 	methods: {
 		LogOut() {

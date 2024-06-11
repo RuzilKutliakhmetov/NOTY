@@ -3,19 +3,26 @@
 		<div class="navbar-router">
 			<router-link class="router-element noty" to="/">NOTY</router-link>
 			<router-link
+				v-if="userStore.userFullData"
+				class="router-element"
+				to="/userpost"
+				>Мои заметки
+			</router-link>
+			<router-link
+				v-if="userStore.userFullData && userStore.userFullData.role === 'admin'"
 				class="router-element"
 				to="/usersposts"
-				v-if="userStore.user && userStore.user.role === 'admin'"
 				>Заметки пользователей
 			</router-link>
 			<router-link
+				v-if="
+					userStore.userFullData && userStore.userFullData?.role === 'admin'
+				"
 				class="router-element"
 				to="/users"
-				v-if="userStore.user && userStore.user.role === 'admin'"
-				>Пользователи</router-link
-			>
+				>Пользователи
+			</router-link>
 		</div>
-
 		<AuthNavbar class="auth-info" />
 	</div>
 </template>

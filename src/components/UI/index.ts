@@ -1,8 +1,8 @@
-import BlackButton from './BlackButton.vue'
-import BlueButton from './BlueButton.vue'
 import Button from './Button.vue'
+import Input from './Input.vue'
 
 import ModalWindow from './ModalWindow.vue'
-import MyInput from './MyInput.vue'
+import Page from './Page.vue'
+import UserInfo from './UserInfo.vue'
 
-export default [BlackButton, BlueButton, Button, ModalWindow, MyInput]
+export default [Page, Button, ModalWindow, Input, UserInfo]

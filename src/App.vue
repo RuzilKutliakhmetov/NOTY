@@ -21,6 +21,7 @@ export default defineComponent({
 	padding: 0;
 	box-sizing: border-box;
 	color: beige;
+	font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 body {
 	background: #181819;
@@ -28,13 +29,7 @@ body {
 .body {
 	margin: 0 10% 0 10%;
 }
-.page-name {
-	font-size: 2.4rem;
-	font-weight: 500;
-}
-.page-name:hover {
-	cursor: default;
-}
+
 .page-header {
 	display: flex;
 	justify-content: space-between;

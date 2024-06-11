@@ -6,7 +6,7 @@
 import { defineComponent } from 'vue'
 
 export default defineComponent({
-	name: 'my-input',
+	name: 'ui-input',
 	props: {
 		modelValue: [String, Number],
 	},

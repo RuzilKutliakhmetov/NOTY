@@ -1,27 +1,43 @@
 <template>
 	<div>
-		<div v-if="!loggedInLocal">
-			<blue-button @click="Login"> Войти </blue-button>
-			<my-modal-window v-model:show="modalWindowVisible">
-				<AuthForm @auth-user-function="authUserFunction" />
-			</my-modal-window>
+		<div v-if="!isUserLoggedIn">
+			<ui-button :buttonType="'primary'" @click="openModalWindowLogin">
+				Войти
+			</ui-button>
+			<ui-modal-window @close="closeModalWindow" :show="isOpenModalWindow">
+				<template #icon>
+					<i class="pi pi-lock auth-form-icon" style="font-size: 3rem" />
+				</template>
+				<template #title> Вход в систему </template>
+				<template #content>
+					<AuthForm />
+				</template>
+				<template #footer>
+					<ui-button
+						:buttonType="'primary'"
+						@click="userLogin(userStore.UserLoginPassword)"
+					>
+						Войти
+					</ui-button>
+				</template>
+			</ui-modal-window>
 		</div>
-		<div class="auth-user-info" v-if="loggedInLocal">
-			<AuthUserInfo @log-out="LogOut" />
+		<div class="auth-user-info" v-if="isUserLoggedIn">
+			<AuthUserInfo @log-out="logOut" />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { usePostStore } from '../../store/PostStore'
 import { useUserStore } from '../../store/UserStore'
-import { UserAuthData } from '../../types/UserAuthData'
+import { UserAuthorizationData } from '../../types/User'
 import AuthForm from './AuthForm.vue'
 import AuthUserInfo from './AuthUserInfo.vue'
 
 interface State {
-	modalWindowVisible: boolean
-	loggedInLocal: boolean
+	isOpenModalWindow: boolean
 }
 
 export default defineComponent({
@@ -31,31 +47,40 @@ export default defineComponent({
 	},
 	data(): State {
 		return {
-			modalWindowVisible: false,
-			loggedInLocal: false,
+			isOpenModalWindow: false,
 		}
 	},
 	setup() {
 		const userStore = useUserStore()
-		return {
-			loggedUser: userStore.user,
-			loggedIn: userStore.loggedIn,
-		}
+		return { userStore }
+	},
+	computed: {
+		isUserLoggedIn() {
+			return this.userStore.isUserLoggedIn
+		},
 	},
 	methods: {
-		Login() {
-			this.modalWindowVisible = true
+		openModalWindowLogin() {
+			this.isOpenModalWindow = true
 		},
-		async authUserFunction(userData: UserAuthData) {
-			const userStore = useUserStore()
-			await userStore.authUser(userData)
-			this.modalWindowVisible = false
-			this.loggedInLocal = true
+		closeModalWindow() {
+			this.isOpenModalWindow = false
 		},
-		LogOut() {
+		async userLogin(userData: UserAuthorizationData) {
 			const userStore = useUserStore()
-			userStore.logOut()
-			this.loggedInLocal = false
+			const postStore = usePostStore()
+			await userStore.userLogin(userData)
+			await userStore.getUserFullData(userStore.userAuthData?.token || null)
+			await postStore.getUserPosts(userStore.userFullData?.id || null)
+			if (userStore.getUserRole === 'admin') {
+				await postStore.getUsersPosts()
+				await userStore.getUsers()
+			}
+			this.isOpenModalWindow = false
+		},
+		logOut() {
+			const userStore = useUserStore()
+			userStore.userLogOut()
 		},
 	},
 })
