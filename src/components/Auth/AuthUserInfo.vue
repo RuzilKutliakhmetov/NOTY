@@ -56,16 +56,6 @@ export default defineComponent({
 	border-radius: 50%;
 	background: white;
 }
-.user-fullname:hover {
-	cursor: default;
-}
-.user-email {
-	font-size: 0.7rem;
-	color: #606063;
-}
-.user-email:hover {
-	cursor: default;
-}
 .logout {
 	font-size: 1.2rem;
 	transition: color 0.3s;
